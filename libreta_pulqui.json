@@ -1,0 +1,355 @@
+{
+  "abelson": {
+    "nombre": "ABELSON",
+    "direccion": "Av. Gaona 3334, Flores, CABA",
+    "barrio": "Flores",
+    "transporte": "",
+    "aliases": []
+  },
+  "abv": {
+    "nombre": "ABV",
+    "direccion": "Av. Dorrego 3018, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "aco": {
+    "nombre": "ACO",
+    "direccion": "Cuenca 736, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "arraza": {
+    "nombre": "ARRAZA",
+    "direccion": "",
+    "barrio": "",
+    "transporte": "Via Cargo",
+    "aliases": []
+  },
+  "artex": {
+    "nombre": "ARTEX",
+    "direccion": "Once de Junio 227, Alberti",
+    "barrio": "Alberti",
+    "transporte": "",
+    "aliases": []
+  },
+  "ascensores servas": {
+    "nombre": "ASCENSORES SERVAS",
+    "direccion": "Av. Juan Manuel de Rosas 11193 (Ruta 3 km 26200)",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "bonomo": {
+    "nombre": "BONOMO",
+    "direccion": "Williams 1582, Hurlingham",
+    "barrio": "Hurlingham",
+    "transporte": "",
+    "aliases": []
+  },
+  "carlos isaac": {
+    "nombre": "CARLOS ISAAC",
+    "direccion": "Achega 3366 timbre 2, CABA",
+    "barrio": "Villa Urquiza",
+    "transporte": "",
+    "aliases": []
+  },
+  "carol's sa": {
+    "nombre": "CAROL'S SA",
+    "direccion": "Quinquela Martín B. 2150, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "colfer": {
+    "nombre": "COLFER",
+    "direccion": "Almeyra 3363, San Martín",
+    "barrio": "San Martín",
+    "transporte": "",
+    "aliases": []
+  },
+  "di forza (libus)": {
+    "nombre": "DI FORZA (LIBUS)",
+    "direccion": "Albariño 2245, Mataderos, CABA",
+    "barrio": "Mataderos",
+    "transporte": "",
+    "aliases": []
+  },
+  "estampadora ana maría": {
+    "nombre": "ESTAMPADORA ANA MARÍA",
+    "direccion": "Peguy 1163, Morón",
+    "barrio": "Morón",
+    "transporte": "",
+    "aliases": []
+  },
+  "fepmel": {
+    "nombre": "FEPMEL",
+    "direccion": "Rincón 3100, La Matanza",
+    "barrio": "La Matanza",
+    "transporte": "",
+    "aliases": []
+  },
+  "fernandez maximiliano adrian": {
+    "nombre": "FERNANDEZ MAXIMILIANO ADRIAN",
+    "direccion": "Guido 2257, Lanús",
+    "barrio": "Lanús",
+    "transporte": "",
+    "aliases": []
+  },
+  "fortinero": {
+    "nombre": "FORTINERO",
+    "direccion": "García de Cossio 7458, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "fábrica calzado": {
+    "nombre": "FÁBRICA CALZADO",
+    "direccion": "Marcón 5352, La Tablada",
+    "barrio": "La Tablada",
+    "transporte": "",
+    "aliases": []
+  },
+  "gecodina": {
+    "nombre": "GECODINA",
+    "direccion": "Venezuela 4852 (entre Colonia y Los Incas)",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "german": {
+    "nombre": "GERMAN",
+    "direccion": "Luro 4297, La Ferrere",
+    "barrio": "La Ferrere",
+    "transporte": "",
+    "aliases": []
+  },
+  "ghalu": {
+    "nombre": "GHALU",
+    "direccion": "Jorge Newbery 2762, Beccar (Edificio Uruguay Norte, Piso 1 of.1)",
+    "barrio": "Beccar",
+    "transporte": "",
+    "aliases": []
+  },
+  "grupo lackinger": {
+    "nombre": "GRUPO LACKINGER",
+    "direccion": "Ricardo Balbín 4119 (esq. Salta), San Martín",
+    "barrio": "San Martín",
+    "transporte": "",
+    "aliases": []
+  },
+  "guibo": {
+    "nombre": "GUIBO",
+    "direccion": "Murguiondo 2267 (entre Lacar y Tres Cruces), Laferrere",
+    "barrio": "Laferrere",
+    "transporte": "",
+    "aliases": []
+  },
+  "gyl": {
+    "nombre": "GYL",
+    "direccion": "Leiva 4467, CABA",
+    "barrio": "Chacarita",
+    "transporte": "",
+    "aliases": []
+  },
+  "idt": {
+    "nombre": "IDT",
+    "direccion": "Erratchu 88, Tristán Suárez",
+    "barrio": "Tristán Suárez",
+    "transporte": "",
+    "aliases": []
+  },
+  "industrial zonda": {
+    "nombre": "INDUSTRIAL ZONDA",
+    "direccion": "María Asunta 3311, Villa Lynch",
+    "barrio": "Villa Lynch",
+    "transporte": "",
+    "aliases": []
+  },
+  "latin work": {
+    "nombre": "LATIN WORK",
+    "direccion": "Av. Gral. Paz 245, Sáenz Peña",
+    "barrio": "Sáenz Peña",
+    "transporte": "",
+    "aliases": []
+  },
+  "lupum": {
+    "nombre": "LUPUM",
+    "direccion": "Alvear 3439, Lomas del Mirador",
+    "barrio": "Lomas del Mirador",
+    "transporte": "",
+    "aliases": []
+  },
+  "macata": {
+    "nombre": "MACATA",
+    "direccion": "Av. Mitre 4035, Munro",
+    "barrio": "Munro",
+    "transporte": "",
+    "aliases": []
+  },
+  "martino gustavo hector": {
+    "nombre": "MARTINO GUSTAVO HECTOR",
+    "direccion": "Erezcano 3443, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "mawe": {
+    "nombre": "MAWE",
+    "direccion": "Dardo Rocha 3278, Martínez",
+    "barrio": "Martínez",
+    "transporte": "",
+    "aliases": []
+  },
+  "naviera del sur": {
+    "nombre": "NAVIERA DEL SUR",
+    "direccion": "L.N. Alem 986 piso 2, CABA",
+    "barrio": "",
+    "transporte": "",
+    "aliases": []
+  },
+  "nicolas gorgone": {
+    "nombre": "NICOLAS GORGONE",
+    "direccion": "Av. Riestra 1655, Parque Chacabuco",
+    "barrio": "Parque Chacabuco",
+    "transporte": "",
+    "aliases": []
+  },
+  "optical power": {
+    "nombre": "OPTICAL POWER",
+    "direccion": "Carapachay 3580, Castelar",
+    "barrio": "Castelar",
+    "transporte": "",
+    "aliases": []
+  },
+  "penisse maria del carmen": {
+    "nombre": "PENISSE MARIA DEL CARMEN",
+    "direccion": "Pergamino 3751, CABA",
+    "barrio": "",
+    "transporte": "Mostto D90",
+    "aliases": []
+  },
+  "porcille josefina maria": {
+    "nombre": "PORCILLE JOSEFINA MARIA",
+    "direccion": "Jujuy 903, Bella Vista — 7 a 17hs",
+    "barrio": "Bella Vista",
+    "transporte": "",
+    "aliases": []
+  },
+  "proforce": {
+    "nombre": "PROFORCE",
+    "direccion": "Av. Remedios de Escalada de San Martín 524, Lanús Oeste",
+    "barrio": "Lanús Oeste",
+    "transporte": "",
+    "aliases": []
+  },
+  "rapisur": {
+    "nombre": "RAPISUR",
+    "direccion": "",
+    "barrio": "",
+    "transporte": "Via Cargo",
+    "aliases": []
+  },
+  "reconstructora union sa": {
+    "nombre": "RECONSTRUCTORA UNION SA",
+    "direccion": "Pepirí 1321, CABA",
+    "barrio": "",
+    "transporte": "Barapack",
+    "aliases": [
+      "la union",
+      "la unión"
+    ]
+  },
+  "san cristobal": {
+    "nombre": "SAN CRISTOBAL",
+    "direccion": "Lafayette 1841, CABA",
+    "barrio": "",
+    "transporte": "Taqsa Paq",
+    "aliases": []
+  },
+  "sanchez gaston raul": {
+    "nombre": "SANCHEZ GASTON RAUL",
+    "direccion": "Av. San Martín 1010, Adrogué",
+    "barrio": "Adrogué",
+    "transporte": "",
+    "aliases": []
+  },
+  "soluciones verdes": {
+    "nombre": "SOLUCIONES VERDES",
+    "direccion": "Arieta 3744, San Justo",
+    "barrio": "San Justo",
+    "transporte": "",
+    "aliases": []
+  },
+  "talleres wires": {
+    "nombre": "TALLERES WIRES",
+    "direccion": "Uruguay 251 piñeyro, avellaneda",
+    "barrio": "Avellaneda",
+    "transporte": "",
+    "aliases": []
+  },
+  "two heads": {
+    "nombre": "TWO HEADS",
+    "direccion": "Julio Troxler 3120, CABA",
+    "barrio": "",
+    "transporte": "Expreso Bicentenario SRL",
+    "aliases": []
+  },
+  "valdevez del sur": {
+    "nombre": "VALDEVEZ DEL SUR",
+    "direccion": "Blasparera 1980, Tristán Suárez",
+    "barrio": "Tristán Suárez",
+    "transporte": "",
+    "aliases": []
+  },
+  "pedro ayala": {
+    "nombre": "PEDRO AYALA",
+    "direccion": "Pergamino 3751, CABA",
+    "barrio": "",
+    "transporte": "Expreso Bisonte",
+    "aliases": []
+  },
+  "caña de castilla": {
+    "nombre": "CAÑA DE CASTILLA",
+    "direccion": "",
+    "barrio": "",
+    "transporte": "JE LOGISTICA SRL",
+    "aliases": []
+  },
+  "11h": {
+    "nombre": "11H",
+    "direccion": "",
+    "barrio": "",
+    "transporte": "Cruz del Sur",
+    "aliases": []
+  },
+  "martinez ariel norberto": {
+    "nombre": "MARTINEZ ARIEL NORBERTO",
+    "direccion": "Pergamino 3751, CABA",
+    "barrio": "",
+    "transporte": "Transporte Malargüe",
+    "aliases": []
+  },
+  "schwerdt": {
+    "nombre": "SCHWERDT",
+    "direccion": "BERON DE ASTRADA 1920",
+    "barrio": "",
+    "transporte": "TRANSPORTE MERIDIANO",
+    "aliases": []
+  },
+  "pulvishop": {
+    "nombre": "PULVISHOP",
+    "direccion": "",
+    "barrio": "",
+    "transporte": "Via Cargo",
+    "aliases": []
+  },
+  "m3": {
+    "nombre": "M3",
+    "direccion": "Pepirí 1321, CABA",
+    "barrio": "",
+    "transporte": "Barapack",
+    "aliases": []
+  }
+}
