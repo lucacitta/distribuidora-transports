@@ -68,6 +68,9 @@ function weekdayOf(iso) {
 }
 const norm = (s) => (s || "").trim().toLowerCase();
 
+// Descarta viajes de días ya pasados; los pendientes (sin fecha) se conservan siempre.
+const filtrarViejos = (paradas) => paradas.filter((p) => !p.fecha || p.fecha >= hoyISO());
+
 function resolver(libreta, texto) {
   const k = norm(texto);
   if (libreta[k]) return libreta[k];
@@ -176,7 +179,7 @@ export default function Generador() {
         if (b) {
           const v = JSON.parse(b.value);
           if (v.fecha) setFecha(v.fecha);
-          if (v.paradas) setParadas(v.paradas.map((p) => ({ ...p, id: String(p.id), fecha: p.fecha || v.fecha || hoyISO() })));
+          if (v.paradas) setParadas(filtrarViejos(v.paradas.map((p) => ({ ...p, id: String(p.id), fecha: p.fecha || v.fecha || hoyISO() }))));
           if (v.defaultChofer) setDefaultChofer(v.defaultChofer);
         }
       } catch { /* noop */ }
@@ -199,7 +202,7 @@ export default function Generador() {
 
         if (Array.isArray(ar.paradas) && ar.paradas.length > 0) {
           skipAgendaSync.current = true;
-          const loaded = ar.paradas.map((p) => ({ ...p, id: String(p.id) }));
+          const loaded = filtrarViejos(ar.paradas.map((p) => ({ ...p, id: String(p.id) })));
           setParadas(loaded);
           // Pre-cargar sugerencias de asignación para pendientes importados
           const drafts = {};
