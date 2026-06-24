@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { readLibreta, replaceLibreta } from "@/lib/sheets";
+import libretaJson from "@/libreta_pulqui.json";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const libreta = await readLibreta();
+    let libreta = await readLibreta();
+    // Si el Sheet está vacío, sembrar desde el JSON de respaldo y guardarlo.
+    if (Object.keys(libreta).length === 0) {
+      await replaceLibreta(libretaJson);
+      libreta = libretaJson;
+    }
     return NextResponse.json({ libreta });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
