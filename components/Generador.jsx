@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw, BookOpen, Download, Upload, Pencil, X, Save, Tag, PackageCheck, Eraser, CalendarDays, ArrowRight, Inbox } from "lucide-react";
+import { Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw, BookOpen, Pencil, X, Save, Tag, PackageCheck, Eraser, CalendarDays, ArrowRight, Inbox, Cloud, CloudOff, RefreshCw } from "lucide-react";
 
-// Persistencia local. Reemplaza a window.storage (que era del sandbox donde
-// se prototipó y no existe en un navegador real). Misma forma: get() devuelve
-// { value } o null; set() devuelve una promesa. En la Fase 3 se sincroniza con Sheets.
+// Caché local (instantáneo / offline). La fuente de verdad es Google Sheets,
+// que se sincroniza vía las API routes. localStorage funciona como respaldo.
 const storage = {
   get: async (k) => {
     if (typeof window === "undefined") return null;
@@ -16,6 +15,25 @@ const storage = {
     if (typeof window !== "undefined") window.localStorage.setItem(k, v);
   },
 };
+
+// Helpers de API (Google Sheets vía backend).
+async function apiGet(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(`GET ${url} → ${r.status}`);
+  return r.json();
+}
+async function apiSend(url, method, body) {
+  const r = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`${method} ${url} → ${r.status}`);
+  return r.json();
+}
+
+const nuevoId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 
 const BASE = "Mons. Bufano 2357, San Justo";
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -99,23 +117,74 @@ export default function Generador() {
   const [aviso, setAviso] = useState("");
   const [editKey, setEditKey] = useState(null);
   const [editVal, setEditVal] = useState(null);
+  const [sync, setSync] = useState("idle"); // idle | saving | saved | error
   const taRef = useRef(null);
-  const importRef = useRef(null);
-  const importAgendaRef = useRef(null);
+
+  // Control de sincronización con el Sheet.
+  const hydratedRef = useRef(false);
+  const skipLibretaSync = useRef(false);
+  const skipAgendaSync = useRef(false);
+  const libretaTimer = useRef(null);
+  const agendaTimer = useRef(null);
+
+  async function pushJSON(url, method, body) {
+    setSync("saving");
+    try { await apiSend(url, method, body); setSync("saved"); }
+    catch (e) { setSync("error"); }
+  }
 
   useEffect(() => {
     (async () => {
+      // 1) Instantáneo: caché local (rápido y offline).
       let lib = null;
       try { const r = await storage.get("pulqui_libreta_v2"); if (r) lib = JSON.parse(r.value); } catch (e) {}
-      if (!lib) { lib = SEMILLA; storage.set("pulqui_libreta_v2", JSON.stringify(lib)).catch(() => {}); }
-      setLibreta(lib);
-      try { const b = await storage.get("pulqui_borrador"); if (b) { const v = JSON.parse(b.value); if (v.fecha) setFecha(v.fecha); if (v.paradas) setParadas(v.paradas.map((p) => (p.fecha ? p : { ...p, fecha: v.fecha || hoyISO() }))); if (v.defaultChofer) setDefaultChofer(v.defaultChofer); } } catch (e) {}
+      if (lib) setLibreta(lib);
+      try { const b = await storage.get("pulqui_borrador"); if (b) { const v = JSON.parse(b.value); if (v.fecha) setFecha(v.fecha); if (v.paradas) setParadas(v.paradas.map((p) => ({ ...p, id: String(p.id), fecha: p.fecha || v.fecha || hoyISO() }))); if (v.defaultChofer) setDefaultChofer(v.defaultChofer); } } catch (e) {}
+
+      // 2) Fuente de verdad: Google Sheets.
+      try {
+        const [lr, ar] = await Promise.all([apiGet("/api/libreta"), apiGet("/api/agenda")]);
+        const libSheet = lr.libreta && Object.keys(lr.libreta).length ? lr.libreta : null;
+        if (libSheet) {
+          skipLibretaSync.current = true;
+          setLibreta(libSheet);
+          storage.set("pulqui_libreta_v2", JSON.stringify(libSheet)).catch(() => {});
+        } else if (!lib) {
+          setLibreta(SEMILLA);
+        }
+        if (Array.isArray(ar.paradas) && ar.paradas.length > 0) {
+          skipAgendaSync.current = true;
+          setParadas(ar.paradas.map((p) => ({ ...p, id: String(p.id) })));
+        }
+      } catch (e) {
+        if (!lib) setLibreta(SEMILLA); // sin conexión al Sheet: seguimos con la caché local
+      }
+
+      hydratedRef.current = true;
       setCargado(true);
     })();
   }, []);
 
+  // Caché local de la agenda (borrador) — respaldo offline.
   useEffect(() => { if (cargado) storage.set("pulqui_borrador", JSON.stringify({ fecha, paradas, defaultChofer })).catch(() => {}); }, [fecha, paradas, defaultChofer, cargado]);
   useEffect(() => { setForm((f) => ({ ...f, chofer: defaultChofer })); }, [defaultChofer]);
+
+  // Sincronización con el Sheet (debounce).
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (skipLibretaSync.current) { skipLibretaSync.current = false; return; }
+    clearTimeout(libretaTimer.current);
+    libretaTimer.current = setTimeout(() => pushJSON("/api/libreta", "PUT", { libreta }), 1000);
+    return () => clearTimeout(libretaTimer.current);
+  }, [libreta]);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (skipAgendaSync.current) { skipAgendaSync.current = false; return; }
+    clearTimeout(agendaTimer.current);
+    agendaTimer.current = setTimeout(() => pushJSON("/api/agenda", "PUT", { paradas }), 1000);
+    return () => clearTimeout(agendaTimer.current);
+  }, [paradas]);
 
   function guardarLibreta(nueva) { setLibreta(nueva); storage.set("pulqui_libreta_v2", JSON.stringify(nueva)).catch(() => {}); }
 
@@ -131,7 +200,7 @@ export default function Generador() {
       setParadas((p) => p.map((x) => (x.id === editandoId ? { ...form, id: editandoId, fecha } : x)));
       setEditandoId(null);
     } else {
-      setParadas((p) => [...p, { ...form, id: Date.now() + Math.random(), fecha: pendiente ? "" : fecha, chofer: pendiente ? "" : form.chofer }]);
+      setParadas((p) => [...p, { ...form, id: nuevoId(), fecha: pendiente ? "" : fecha, chofer: pendiente ? "" : form.chofer }]);
       if (form.direccion.trim() || form.barrio.trim() || form.transporte.trim()) {
         const clave = norm(form.nombre);
         const prev = libreta[clave] || {};
@@ -172,48 +241,18 @@ export default function Generador() {
   const cambiarChofer = (id, ch) => setParadas((p) => p.map((x) => (x.id === id ? { ...x, chofer: ch } : x)));
 
   async function copiar(chofer) {
+    const propias = paradas.filter((p) => p.fecha === fecha && p.chofer === chofer);
     const txt = textoChofer(chofer, fecha, paradas.filter((p) => p.fecha === fecha)); if (!txt) return;
     try { await navigator.clipboard.writeText(txt); } catch (e) { if (taRef.current) { taRef.current.value = txt; taRef.current.select(); document.execCommand("copy"); } }
     setCopiado(chofer); setTimeout(() => setCopiado(null), 1800);
+    // Registrar la hoja generada en el historial (pestaña "Hojas de ruta").
+    apiSend("/api/hojas-de-ruta", "POST", { fecha, chofer, cant_paradas: propias.length, texto: txt, generado_en: new Date().toISOString() }).catch(() => {});
   }
   const pedir = (msg, onOk) => setConfirmar({ msg, onOk });
   const toast = (m) => { setAviso(m); setTimeout(() => setAviso(""), 2600); };
   function limpiarDia() { pedir(`¿Vaciar las paradas del ${fechaLarga(fecha)}? La libreta y los otros días se mantienen.`, () => setParadas((p) => p.filter((x) => x.fecha !== fecha))); }
   function vaciarAgenda() { pedir("¿Vaciar TODA la agenda? Borra los viajes de todos los días y no se puede deshacer. La libreta se mantiene.", () => { setParadas([]); setEditandoId(null); }); }
-  function exportarAgenda() {
-    const blob = new Blob([JSON.stringify({ paradas, defaultChofer }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob); const a = document.createElement("a");
-    a.href = url; a.download = `agenda_viajes_pulqui_${hoyISO()}.json`; a.click(); URL.revokeObjectURL(url);
-  }
-  function importarAgenda(e) {
-    const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      let arr, dc;
-      try {
-        const data = JSON.parse(ev.target.result);
-        arr = (Array.isArray(data) ? data : data.paradas || []).map((p) => (p.fecha ? p : { ...p, fecha: hoyISO() }));
-        dc = !Array.isArray(data) ? data.defaultChofer : null;
-      } catch (err) { toast("No pude leer el archivo de agenda."); return; }
-      const aplicar = () => { setParadas(arr); if (dc) setDefaultChofer(dc); setEditandoId(null); toast(`Agenda importada: ${arr.length} viaje(s).`); };
-      if (paradas.length > 0) pedir("Importar reemplaza la agenda actual por la del archivo. ¿Seguir?", aplicar);
-      else aplicar();
-    };
-    reader.readAsText(file); e.target.value = "";
-  }
-
-  function exportar() {
-    const blob = new Blob([JSON.stringify(libreta, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob); const a = document.createElement("a");
-    a.href = url; a.download = `libreta_direcciones_pulqui_${hoyISO()}.json`; a.click(); URL.revokeObjectURL(url);
-  }
-  function importar(e) {
-    const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => { try { const data = JSON.parse(ev.target.result); const merged = { ...libreta, ...data }; guardarLibreta(merged); toast(`Libreta importada: ${Object.keys(merged).length} entradas.`); } catch (err) { toast("No pude leer el archivo de libreta."); } };
-    reader.readAsText(file); e.target.value = "";
-  }
-  function vaciarLibreta() { pedir("¿Vaciar TODA la libreta? Conviene exportar un backup antes. Esto no se puede deshacer.", () => guardarLibreta({})); }
+  function vaciarLibreta() { pedir("¿Vaciar TODA la libreta? Esto borra todos los clientes guardados (también en el Sheet) y no se puede deshacer.", () => guardarLibreta({})); }
 
   function iniciarEdit(k) { setEditKey(k); setEditVal({ ...libreta[k], aliasesTxt: (libreta[k].aliases || []).join(", ") }); }
   function guardarEdit() {
@@ -235,6 +274,13 @@ export default function Generador() {
 
   const inputCls = "mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none";
   const lblCls = "text-xs font-semibold uppercase tracking-wide text-slate-500";
+
+  const SYNC_UI = {
+    saving: { icon: <RefreshCw size={13} className="animate-spin" />, txt: "Guardando…", cls: "text-slate-500 bg-stone-100 border-stone-200" },
+    saved: { icon: <Cloud size={13} />, txt: "Guardado", cls: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+    error: { icon: <CloudOff size={13} />, txt: "Sin conexión", cls: "text-red-500 bg-red-50 border-red-200" },
+  };
+  const syncBadge = SYNC_UI[sync];
 
   return (
     <div style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }} className="min-h-screen bg-stone-100 text-slate-800 p-4 sm:p-6">
@@ -266,6 +312,7 @@ export default function Generador() {
           <p className="text-sm text-slate-500 ml-12">Cargá las paradas → copiá el texto listo para WhatsApp</p>
         </div>
         <div className="flex items-center gap-2">
+          {syncBadge && <span className={`flex items-center gap-1.5 text-xs font-medium border px-2.5 py-2 rounded-lg ${syncBadge.cls}`}>{syncBadge.icon} {syncBadge.txt}</span>}
           <button onClick={() => { setVerConsolidado((v) => !v); setVerLibreta(false); }} className="flex items-center gap-2 text-sm font-medium bg-white border border-stone-300 hover:bg-stone-50 px-3 py-2 rounded-lg shadow-sm"><CalendarDays size={16} className="text-sky-500" /> Consolidado{dias.length > 0 ? ` (${dias.length} día${dias.length === 1 ? "" : "s"})` : ""}</button>
           <button onClick={() => { setVerLibreta((v) => !v); setVerConsolidado(false); }} className="flex items-center gap-2 text-sm font-medium bg-white border border-stone-300 hover:bg-stone-50 px-3 py-2 rounded-lg shadow-sm"><BookOpen size={16} className="text-amber-500" /> Libreta ({Object.keys(libreta).length})</button>
         </div>
@@ -276,9 +323,6 @@ export default function Generador() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-sm flex items-center gap-2"><CalendarDays size={16} className="text-sky-500" /> Consolidado de viajes</h2>
             <div className="flex items-center gap-2">
-              <button onClick={exportarAgenda} disabled={dias.length === 0} className="flex items-center gap-1.5 text-xs font-medium bg-slate-800 text-white px-3 py-1.5 rounded-md hover:bg-slate-700 disabled:opacity-30"><Download size={14} /> Exportar</button>
-              <button onClick={() => importAgendaRef.current?.click()} className="flex items-center gap-1.5 text-xs font-medium bg-white border border-stone-300 px-3 py-1.5 rounded-md hover:bg-stone-50"><Upload size={14} /> Importar</button>
-              <input ref={importAgendaRef} type="file" accept="application/json,.json" onChange={importarAgenda} style={{ display: "none" }} />
               {dias.length > 0 && <button onClick={vaciarAgenda} className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1"><Eraser size={13} /> Vaciar todo</button>}
               <button onClick={() => setVerConsolidado(false)} className="text-slate-300 hover:text-slate-600"><X size={16} /></button>
             </div>
@@ -341,10 +385,8 @@ export default function Generador() {
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h2 className="font-semibold text-sm flex items-center gap-2"><BookOpen size={16} className="text-amber-500" /> Libreta</h2>
             <div className="flex items-center gap-2">
-              <button onClick={exportar} className="flex items-center gap-1.5 text-xs font-medium bg-slate-800 text-white px-3 py-1.5 rounded-md hover:bg-slate-700"><Download size={14} /> Exportar</button>
-              <button onClick={() => importRef.current?.click()} className="flex items-center gap-1.5 text-xs font-medium bg-white border border-stone-300 px-3 py-1.5 rounded-md hover:bg-stone-50"><Upload size={14} /> Importar</button>
               <button onClick={vaciarLibreta} className="flex items-center gap-1.5 text-xs font-medium bg-white border border-stone-300 px-3 py-1.5 rounded-md hover:bg-red-50 text-red-500"><Eraser size={14} /> Vaciar</button>
-              <input ref={importRef} type="file" accept="application/json,.json" onChange={importar} style={{ display: "none" }} />
+              <button onClick={() => setVerLibreta(false)} className="text-slate-300 hover:text-slate-600"><X size={16} /></button>
             </div>
           </div>
           <div className="space-y-2 max-h-80 overflow-auto">
