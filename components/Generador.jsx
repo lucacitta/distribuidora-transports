@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
+import LIBRETA_JSON from "@/libreta_pulqui.json";
 import {
   Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw,
   BookOpen, Pencil, X, Save, Tag, PackageCheck, Eraser, CalendarDays,
@@ -49,9 +50,7 @@ const DIAS_REC = [
   { label: "Sáb", val: 6 },
 ];
 
-const SEMILLA = {
-  "reconstructora union sa": { nombre: "Reconstructora Union SA", direccion: "Pepirí 1321, CABA", barrio: "", transporte: "Barapack", aliases: ["la union", "la unión"] },
-};
+const SEMILLA = LIBRETA_JSON;
 
 function hoyISO() {
   const d = new Date();

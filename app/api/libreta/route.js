@@ -9,7 +9,7 @@ export async function GET() {
   try {
     let libreta = await readLibreta();
     // Si el Sheet está vacío, sembrar desde el JSON de respaldo y guardarlo.
-    if (Object.keys(libreta).length === 0) {
+    if (Object.keys(libreta).length < 10) {
       await replaceLibreta(libretaJson);
       libreta = libretaJson;
     }
