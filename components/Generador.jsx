@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import * as XLSX from "xlsx";
 import LIBRETA_JSON from "@/libreta_pulqui.json";
 import {
   Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw,
@@ -116,146 +115,6 @@ function conNegritas(linea, key) {
 
 const VACIA = { tipo: "Entrega", nombre: "", barrio: "", carga: "", retira: "", horario: "", transporte: "", direccion: "", notas: "" };
 const VACIA_REC = { nombre: "", tipo: "Entrega", direccion: "", barrio: "", transporte: "", horario: "", chofer: "José", dias: [] };
-
-// ---------- Import helpers ----------
-
-function calcImpKey(nombre, tipo, carga, retira, fechaSug) {
-  return [nombre, tipo, carga, retira, fechaSug].map((s) => norm(s)).join("|");
-}
-
-function parseFechaExcel(raw) {
-  if (!raw) return "";
-  const serial = Number(raw);
-  if (!isNaN(serial) && serial > 1000) {
-    try {
-      const d = XLSX.SSF.parse_date_code(serial);
-      if (d) return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
-    } catch { /* noop */ }
-  }
-  const s = String(raw).trim();
-  if (s.match(/^\d{4}-\d{2}-\d{2}/)) return s.slice(0, 10);
-  // dd/mm/yy or dd/mm/yyyy
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (m) {
-    const [, d, mo, y] = m;
-    const year = y.length === 2 ? "20" + y : y;
-    return `${year}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
-  }
-  return "";
-}
-
-function parsearExcel(file, paradasExistentes) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const wb = XLSX.read(e.target.result, { type: "array" });
-        const sheetName = wb.SheetNames.includes("Pedidos José")
-          ? "Pedidos José"
-          : wb.SheetNames[0];
-        const ws = wb.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-
-        const headerRowIdx = data.findIndex((row) =>
-          row.some((cell) => norm(String(cell)) === "nombre")
-        );
-        if (headerRowIdx === -1) {
-          reject(new Error("No se encontró la columna 'nombre' en la planilla."));
-          return;
-        }
-
-        const headers = data[headerRowIdx].map((h) => norm(String(h)));
-
-        const ALIAS = {
-          fechaSug: ["fecha sugerida", "fecha"],
-          accion:   ["acción", "accion", "tipo de viaje"],
-          nombre:   ["nombre"],
-          carga:    ["qué lleva", "que lleva", "detalle de carga", "carga"],
-          retira:   ["qué retira", "que retira"],
-          direccion:["dirección", "direccion"],
-          barrio:   ["zona / barrio", "zona / localidad", "zona", "barrio", "localidad"],
-          horario:  ["horario", "horario de atención", "horario de atencion"],
-          urgente:  ["urgente"],
-          notas:    ["observaciones", "notas"],
-          chofer:   ["chofer sugerido", "chofer (cami / dani)", "chofer"],
-          estado:   ["estado (cami)", "estado"],
-        };
-
-        const cols = {};
-        for (const [campo, aliases] of Object.entries(ALIAS)) {
-          for (const alias of aliases) {
-            const idx = headers.indexOf(alias);
-            if (idx !== -1) { cols[campo] = idx; break; }
-          }
-        }
-
-        const existingKeys = new Set(paradasExistentes.map((p) => p.impKey).filter(Boolean));
-        const importados = [];
-
-        for (let i = headerRowIdx + 1; i < data.length; i++) {
-          const row = data[i];
-          const get = (campo) =>
-            String(cols[campo] !== undefined ? row[cols[campo]] ?? "" : "").trim();
-
-          const nombre = get("nombre");
-          if (!nombre) continue;
-          if (norm(get("estado")) === "completado") continue;
-
-          const accionRaw = norm(get("accion"));
-          let tipo = "Entrega";
-          if ((accionRaw.includes("llevar") || accionRaw.includes("entreg")) && accionRaw.includes("retir"))
-            tipo = "Entrega y retiro";
-          else if (accionRaw.includes("retir") || accionRaw.includes("proveedor"))
-            tipo = "Retiro";
-          else if (accionRaw.includes("llevar") || accionRaw.includes("entreg"))
-            tipo = "Entrega";
-
-          const choferRaw = norm(get("chofer"));
-          const impChoferSug = choferRaw.startsWith("ariel") ? "Ariel" : "José";
-
-          const urgente = norm(get("urgente")).startsWith("s");
-          const notasBase = get("notas");
-          const notas = urgente
-            ? ("⚠ URGENTE" + (notasBase ? " — " + notasBase : ""))
-            : notasBase;
-
-          const impFechaSug = parseFechaExcel(get("fechaSug"));
-          const carga = get("carga");
-          const retira = get("retira");
-          const impKey = calcImpKey(nombre, tipo, carga, retira, impFechaSug);
-
-          if (existingKeys.has(impKey)) continue;
-          existingKeys.add(impKey);
-
-          importados.push({
-            id: nuevoId(),
-            fecha: "",
-            chofer: "",
-            tipo,
-            nombre,
-            barrio: get("barrio"),
-            direccion: get("direccion"),
-            carga,
-            retira,
-            horario: get("horario"),
-            transporte: "",
-            notas,
-            impKey,
-            recurrenteId: "",
-            impFechaSug,
-            impChoferSug,
-          });
-        }
-
-        resolve(importados);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = () => reject(new Error("Error al leer el archivo."));
-    reader.readAsArrayBuffer(file);
-  });
-}
 
 // ---------- Componente principal ----------
 
@@ -505,12 +364,18 @@ export default function Generador() {
     e.target.value = "";
     setImportMsg("Procesando…");
     try {
-      const nuevos = await parsearExcel(file, paradas);
+      const existingKeys = paradas.map((p) => p.impKey).filter(Boolean);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("existingKeys", JSON.stringify(existingKeys));
+      const res = await fetch("/api/importar-excel", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error del servidor.");
+      const nuevos = data.importados || [];
       if (nuevos.length === 0) {
         setImportMsg("No hay pedidos nuevos (completados o ya importados).");
       } else {
         setParadas((p) => [...p, ...nuevos]);
-        // Pre-cargar drafts de asignación con las sugerencias
         setAsigDraft((d) => {
           const patch = {};
           for (const n of nuevos) {
