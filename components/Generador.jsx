@@ -782,7 +782,7 @@ export default function Generador() {
                               <td className="px-3 py-3.5 text-slate-500 text-xs hidden md:table-cell max-w-[180px] truncate">{p.direccion || <span className="text-slate-300">—</span>}</td>
                               <td className="px-3 py-3.5 text-xs hidden lg:table-cell max-w-[180px]">
                                 {p.carga
-                                  ? <div className="text-slate-600 truncate"><span className="font-semibold text-slate-400">Lleva:</span> {p.carga}</div>
+                                  ? <div className="text-slate-600 truncate"><span className="font-semibold text-slate-400">{p.tipo === "Retiro" ? "Retira:" : "Lleva:"}</span> {p.carga}</div>
                                   : <span className="text-slate-300">—</span>}
                                 {p.tipo === "Entrega y retiro" && p.retira
                                   ? <div className="text-slate-600 truncate mt-0.5"><span className="font-semibold text-slate-400">Retira:</span> {p.retira}</div>
