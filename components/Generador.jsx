@@ -5,7 +5,7 @@ import LIBRETA_JSON from "@/libreta_pulqui.json";
 import {
   Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw,
   BookOpen, Pencil, X, Save, Tag, PackageCheck, Eraser, CalendarDays,
-  Inbox, Cloud, CloudOff, RefreshCw, FileUp, Repeat,
+  Inbox, Cloud, CloudOff, RefreshCw, FileUp, Repeat, Menu,
   ChevronLeft, ChevronRight, Search, History, MessageSquare,
 } from "lucide-react";
 
@@ -179,6 +179,7 @@ export default function Generador() {
   const [expandedDias, setExpandedDias]     = useState(new Set());
   const [expandedRecs, setExpandedRecs]     = useState(new Set());
   const [formRecAbierto, setFormRecAbierto] = useState(false);
+  const [sidebarOpen, setSidebarOpen]       = useState(false);
 
 
   // Refs
@@ -454,8 +455,11 @@ export default function Generador() {
         </div>
       )}
 
+      {/* Backdrop mobile */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
+
       {/* ══════ SIDEBAR ══════ */}
-      <aside className="w-60 flex flex-col shrink-0 relative" style={{ background: "#0E0A04", borderRight: "1px solid #1E1508" }}>
+      <aside className={`fixed md:relative inset-y-0 left-0 z-40 w-64 md:w-60 flex flex-col shrink-0 transition-transform duration-300 ease-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`} style={{ background: "#0E0A04", borderRight: "1px solid #1E1508" }}>
         {/* Logo */}
         <div className="px-5 py-5 flex items-center gap-3" style={{ borderBottom: "1px solid #1E1508" }}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shrink-0" style={{ background: "#F5A623" }}>
@@ -475,7 +479,7 @@ export default function Generador() {
             { view: "pendientes",  icon: <Inbox size={14} />,        label: "Pendientes",   badge: pendientes.length },
             { view: "consolidado", icon: <MessageSquare size={14} />, label: "Consolidado", badge: diasFuturos.length },
           ].map(({ view, icon, label, badge }) => (
-            <button key={view} onClick={() => setActiveView(view)}
+            <button key={view} onClick={() => { setActiveView(view); setSidebarOpen(false); }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-all ${activeView === view ? "" : "text-[#8A6A3A] hover:bg-[#1A1209] hover:text-[#F5A623]"}`}
               style={activeView === view ? { background: "#F5A623", color: "#0E0A04" } : undefined}
             >
@@ -486,7 +490,7 @@ export default function Generador() {
 
           <div className="pt-4 pb-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] px-3 mb-2" style={{ color: "#4A3820" }}>Historial</p>
-            <button onClick={() => setActiveView("historial")}
+            <button onClick={() => { setActiveView("historial"); setSidebarOpen(false); }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-all ${activeView === "historial" ? "" : "text-[#8A6A3A] hover:bg-[#1A1209] hover:text-[#F5A623]"}`}
               style={activeView === "historial" ? { background: "#F5A623", color: "#0E0A04" } : undefined}
             >
@@ -502,7 +506,7 @@ export default function Generador() {
             { view: "libreta",     icon: <BookOpen size={14} />, label: "Libreta",     badge: Object.keys(libreta).length },
             { view: "recurrentes", icon: <Repeat size={14} />,   label: "Recurrentes", badge: recurrentes.length },
           ].map(({ view, icon, label, badge }) => (
-            <button key={view} onClick={() => setActiveView(view)}
+            <button key={view} onClick={() => { setActiveView(view); setSidebarOpen(false); }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-all ${activeView === view ? "" : "text-[#8A6A3A] hover:bg-[#1A1209] hover:text-[#F5A623]"}`}
               style={activeView === view ? { background: "#F5A623", color: "#0E0A04" } : undefined}
             >
@@ -541,29 +545,34 @@ export default function Generador() {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar */}
-        <header className="bg-white px-6 h-14 flex items-center gap-3 shrink-0" style={{ borderBottom: "2px solid #F5A623", boxShadow: "0 1px 8px 0 rgba(245,166,35,0.08)" }}>
+        <header className="bg-white px-3 md:px-6 h-14 flex items-center gap-2 md:gap-3 shrink-0" style={{ borderBottom: "2px solid #F5A623", boxShadow: "0 1px 8px 0 rgba(245,166,35,0.08)" }}>
+          {/* Hamburger — mobile only */}
+          <button className="md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition shrink-0" onClick={() => setSidebarOpen(true)}>
+            <Menu size={18} />
+          </button>
+
           {activeView === "agenda" && (
             <>
-              <div className="flex items-center gap-1">
-                <button onClick={() => navDia(-1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition">
+              <div className="flex items-center gap-1 min-w-0">
+                <button onClick={() => navDia(-1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition shrink-0">
                   <ChevronLeft size={16} />
                 </button>
-                <div className="px-2">
-                  <span className="font-bold text-slate-800">{fechaLarga(fecha)}</span>
-                  {fecha === hoyISO() && <span className="ml-2 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ background: "#FFF3D6", color: "#C47A0A" }}>Hoy</span>}
+                <div className="px-1 md:px-2 min-w-0">
+                  <span className="font-bold text-slate-800 text-sm md:text-base truncate">{fechaLarga(fecha)}</span>
+                  {fecha === hoyISO() && <span className="ml-1 md:ml-2 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ background: "#FFF3D6", color: "#C47A0A" }}>Hoy</span>}
                 </div>
-                <button onClick={() => navDia(1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition">
+                <button onClick={() => navDia(1)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition shrink-0">
                   <ChevronRight size={16} />
                 </button>
-                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="ml-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-400 focus:outline-none focus:border-amber-400" />
+                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="hidden md:block ml-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-400 focus:outline-none focus:border-amber-400" />
                 {fecha !== hoyISO() && (
-                  <button onClick={() => setFecha(hoyISO())} className="ml-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition flex items-center gap-1.5">
+                  <button onClick={() => setFecha(hoyISO())} className="hidden md:flex ml-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition items-center gap-1.5">
                     <CalendarDays size={12} /> Hoy
                   </button>
                 )}
               </div>
 
-              <div className="flex rounded-lg border border-slate-200 overflow-hidden ml-1">
+              <div className="hidden md:flex rounded-lg border border-slate-200 overflow-hidden ml-1">
                 {[["", "Todos"], ["José", "José"], ["Ariel", "Ariel"]].map(([val, lbl]) => (
                   <button key={val} onClick={() => setFiltroChofer(val)} className={`px-3 py-1.5 text-xs font-semibold transition ${filtroChofer === val ? "bg-slate-800 text-white" : "text-slate-500 hover:bg-slate-50"}`}>{lbl}</button>
                 ))}
@@ -571,13 +580,13 @@ export default function Generador() {
 
               <div className="flex-1" />
 
-              {importMsg && <span className="text-xs text-violet-700 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><FileUp size={12} /> {importMsg}</span>}
+              {importMsg && <span className="hidden md:flex text-xs text-violet-700 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-lg items-center gap-1.5"><FileUp size={12} /> {importMsg}</span>}
 
               {CHOFERES.map((ch) => {
                 const txt = textoChofer(ch, fecha, paradasDia);
                 const key = ch + (fecha || "");
                 return (
-                  <button key={ch} onClick={() => copiar(ch)} disabled={!txt} className={`flex items-center gap-1.5 text-xs font-semibold border px-3 py-1.5 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed ${copiado === key ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                  <button key={ch} onClick={() => copiar(ch)} disabled={!txt} className={`hidden md:flex items-center gap-1.5 text-xs font-semibold border px-3 py-1.5 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed ${copiado === key ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
                     {copiado === key ? <Check size={13} /> : <Copy size={13} />} {ch}
                   </button>
                 );
@@ -585,14 +594,14 @@ export default function Generador() {
 
               {paradasDia.length > 0 && (
                 <button onClick={() => pedir(`¿Vaciar todos los viajes del ${fechaLarga(fecha)}?`, () => setParadas((p) => p.filter((x) => x.fecha !== fecha)))}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition">
+                  className="hidden md:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition">
                   <RotateCcw size={13} /> Vaciar día
                 </button>
               )}
               <button onClick={() => { setForm({ ...VACIA, chofer: defaultChofer }); setEditandoId(null); setReconocido(false); setPanel({ mode: "create" }); }}
-                className="flex items-center gap-1.5 font-bold px-4 py-1.5 rounded-lg text-sm shadow-sm transition"
+                className="flex items-center gap-1.5 font-bold px-3 md:px-4 py-1.5 rounded-lg text-sm shadow-sm transition shrink-0"
                 style={{ background: "#F5A623", color: "#0E0A04" }}>
-                <Plus size={15} strokeWidth={2.5} /> Nuevo viaje
+                <Plus size={15} strokeWidth={2.5} /> <span className="hidden sm:inline">Nuevo viaje</span><span className="sm:hidden">Nuevo</span>
               </button>
             </>
           )}
@@ -600,7 +609,7 @@ export default function Generador() {
           {activeView === "pendientes" && (
             <>
               <div>
-                <h1 className="font-bold text-slate-800">Pendientes</h1>
+                <h1 className="font-bold text-slate-800 text-sm md:text-base">Pendientes</h1>
                 <p className="text-xs text-slate-400">{pendientes.length} viaje{pendientes.length !== 1 ? "s" : ""} sin asignar</p>
               </div>
               <div className="flex-1" />
@@ -649,7 +658,7 @@ export default function Generador() {
 
         {/* Chips de días futuros */}
         {activeView === "agenda" && diasFuturos.length > 0 && (
-          <div className="flex items-center gap-2 px-6 py-2 flex-wrap bg-white border-b border-slate-100">
+          <div className="flex items-center gap-2 px-4 md:px-6 py-2 overflow-x-auto bg-white border-b border-slate-100 scrollbar-none" style={{ scrollbarWidth: "none" }}>
             {diasFuturos.map((d) => {
               const cant = paradas.filter((p) => p.fecha === d).length;
               const activo = d === fecha;
@@ -671,7 +680,7 @@ export default function Generador() {
         )}
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-6 space-y-4">
+        <main className="flex-1 overflow-auto p-3 md:p-6 space-y-4">
 
           {/* ═══ AGENDA ═══ */}
           {activeView === "agenda" && (
@@ -1213,7 +1222,7 @@ export default function Generador() {
 
       {/* ══════ SLIDE PANEL ══════ */}
       {panel && <div className="fixed inset-0 bg-black/25 z-30" onClick={() => { setPanel(null); cancelarEdicion(); }} />}
-      <div className={`fixed right-0 top-0 h-full w-[480px] bg-white shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-out ${panel ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed right-0 top-0 h-full w-full md:w-[480px] bg-white shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-out ${panel ? "translate-x-0" : "translate-x-full"}`}>
         {panel && (
           <>
             {/* Panel header */}
