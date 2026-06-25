@@ -6,7 +6,7 @@ import {
   Plus, Trash2, Copy, Check, ChevronUp, ChevronDown, Truck, RotateCcw,
   BookOpen, Pencil, X, Save, Tag, PackageCheck, Eraser, CalendarDays,
   Inbox, Cloud, CloudOff, RefreshCw, FileUp, Repeat, Menu,
-  ChevronLeft, ChevronRight, Search, History, MessageSquare,
+  ChevronLeft, ChevronRight, Search, History, MessageSquare, GripVertical,
 } from "lucide-react";
 
 // ─── Storage / API ────────────────────────────────────────────────────────────
@@ -180,6 +180,8 @@ export default function Generador() {
   const [expandedRecs, setExpandedRecs]     = useState(new Set());
   const [formRecAbierto, setFormRecAbierto] = useState(false);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
+  const [dragId, setDragId]                 = useState(null);
+  const [dragOverId, setDragOverId]         = useState(null);
 
 
   // Refs
@@ -312,6 +314,19 @@ export default function Generador() {
       const pos  = same.findIndex((o) => o.x.id === id), tgt = pos + dir;
       if (tgt < 0 || tgt >= same.length) return p;
       const a = same[pos].idx, b = same[tgt].idx, c = [...p]; [c[a], c[b]] = [c[b], c[a]]; return c;
+    });
+  }
+
+  function reordenar(draggedId, targetId) {
+    if (draggedId === targetId) return;
+    setParadas((prev) => {
+      const dragged = prev.find((x) => x.id === draggedId);
+      if (!dragged) return prev;
+      const rest = prev.filter((x) => x.id !== draggedId);
+      const tgtIdx = rest.findIndex((x) => x.id === targetId);
+      if (tgtIdx === -1) return prev;
+      rest.splice(tgtIdx, 0, dragged);
+      return rest;
     });
   }
 
@@ -773,8 +788,20 @@ export default function Generador() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {filas.map((p, i) => (
-                            <tr key={p.id} onClick={() => setPanel({ mode: "detail", trip: p })} className={`hover:bg-amber-50/40 cursor-pointer transition group ${RowAccent({ tipo: p.tipo, transporte: p.transporte })}`}>
-                              <td className="pl-4 pr-3 py-3.5"><TipoBadge tipo={p.tipo} transporte={p.transporte} /></td>
+                            <tr key={p.id}
+                              draggable
+                              onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragId(p.id); }}
+                              onDragEnd={() => { setDragId(null); setDragOverId(null); }}
+                              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverId(p.id); }}
+                              onDrop={(e) => { e.preventDefault(); if (dragId) reordenar(dragId, p.id); setDragId(null); setDragOverId(null); }}
+                              onClick={() => { if (!dragId) setPanel({ mode: "detail", trip: p }); }}
+                              className={`transition group ${RowAccent({ tipo: p.tipo, transporte: p.transporte })} ${dragId === p.id ? "opacity-30" : dragOverId === p.id && dragId !== p.id ? "bg-amber-100" : "hover:bg-amber-50/40"}`}
+                              style={{ cursor: dragId ? "grabbing" : "grab" }}
+                            >
+                              <td className="pl-2 pr-1 py-3.5 w-5">
+                                <GripVertical size={13} className="text-slate-300 group-hover:text-slate-400 transition" />
+                              </td>
+                              <td className="pr-3 py-3.5"><TipoBadge tipo={p.tipo} transporte={p.transporte} /></td>
                               <td className="px-3 py-3.5">
                                 <div className="font-semibold text-slate-800">{p.nombre}</div>
                               </td>
