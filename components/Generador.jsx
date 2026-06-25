@@ -275,7 +275,7 @@ export default function Generador() {
   function agregar(pendiente = false) {
     if (!form.nombre.trim()) return;
     if (editandoId) {
-      setParadas((p) => p.map((x) => (x.id === editandoId ? { ...form, id: editandoId, fecha } : x)));
+      setParadas((p) => p.map((x) => (x.id === editandoId ? { ...form, chofer: form.chofer || defaultChofer, id: editandoId, fecha } : x)));
       setEditandoId(null);
     } else {
       setParadas((p) => [...p, { ...form, id: nuevoId(), fecha: pendiente ? "" : fecha, chofer: pendiente ? "" : form.chofer, impKey: "", recurrenteId: "", impFechaSug: "", impChoferSug: "" }]);
@@ -813,6 +813,43 @@ export default function Generador() {
                   );
                 })
               )}
+
+              {/* Viajes sin chofer asignado */}
+              {(() => {
+                const sinChofer = paradasDia.filter((p) => !p.chofer);
+                if (!sinChofer.length) return null;
+                return (
+                  <div className="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-5 py-3 bg-red-50 border-b border-red-100">
+                      <span className="font-bold text-red-600 text-sm">Sin chofer asignado</span>
+                      <span className="text-xs text-red-400">{sinChofer.length} viaje{sinChofer.length !== 1 ? "s" : ""} · asigná un chofer para que aparezcan en la hoja de ruta</span>
+                    </div>
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-slate-100">
+                        {sinChofer.map((p) => (
+                          <tr key={p.id} onClick={() => setPanel({ mode: "detail", trip: p })} className={`hover:bg-amber-50/40 cursor-pointer transition group ${RowAccent({ tipo: p.tipo, transporte: p.transporte })}`}>
+                            <td className="pl-4 pr-3 py-3.5"><TipoBadge tipo={p.tipo} transporte={p.transporte} /></td>
+                            <td className="px-3 py-3.5 font-semibold text-slate-800">{p.nombre}</td>
+                            <td className="px-3 py-3.5" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex rounded-lg border border-slate-200 overflow-hidden w-fit">
+                                {CHOFERES.map((c) => (
+                                  <button key={c} onClick={() => cambiarChofer(p.id, c)} className="px-3 py-1.5 text-xs font-semibold bg-white text-slate-500 hover:bg-amber-50 hover:text-amber-700 transition">{c}</button>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3.5">
+                              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+                                <button onClick={(e) => { e.stopPropagation(); abrirEditar(p); }} className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-sky-600"><Pencil size={13} /></button>
+                                <button onClick={(e) => { e.stopPropagation(); pedir(`¿Eliminar el viaje a ${p.nombre}?`, () => borrar(p.id)); }} className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-red-500"><Trash2 size={13} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {/* WhatsApp messages — siempre visibles si hay paradas */}
               {paradasDia.length > 0 && (
